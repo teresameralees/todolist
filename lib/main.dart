@@ -124,29 +124,27 @@ class _ToDoListState extends State<ToDoList> {
           ),
           // Lista de tareas filtradas
           Expanded(
-            child: filteredTasks.isEmpty
-                ? Center(child: Text('No hay tareas que coincidan'))
-                : ListView.builder(
-                    itemCount: filteredTasks.length,
-                    itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(filteredTasks[index]),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.check),
-                              onPressed: () => toggleTaskCompletion(index),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () => removeTask(index),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+            child: ListView.builder(
+              itemCount: tasks.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(tasks[index]),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.check),
+                        onPressed: () => toggleTaskCompletion(index),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => removeTask(index),
+                      ),
+                    ],
                   ),
+                );
+              },
+            ),
           ),
         ],
       ),
