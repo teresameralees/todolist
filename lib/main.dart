@@ -23,33 +23,63 @@ class ToDoList extends StatefulWidget {
 }
 
 class _ToDoListState extends State<ToDoList> {
-  // Lista de tareas
   List<String> tasks = [];
-  // Controlador para el campo de texto
-  TextEditingController taskController = TextEditingController();
+  List<String> filteredTasks = [];
 
-  // Función para agregar una tarea
+  TextEditingController taskController = TextEditingController();
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredTasks = tasks;
+
+    searchController.addListener(() {
+      filterTasks();
+    });
+  }
+
+  void filterTasks() {
+    String query = searchController.text.toLowerCase();
+    setState(() {
+      filteredTasks = tasks
+          .where((task) => task.toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
   void addTask() {
     if (taskController.text.isNotEmpty) {
       setState(() {
         tasks.add(taskController.text);
-        taskController.clear(); // Limpiar el campo de texto
+        taskController.clear();
+        filterTasks(); // importante para mantener sincronizado
       });
     }
   }
 
-  // Función para eliminar una tarea
   void removeTask(int index) {
+    String taskToRemove = filteredTasks[index];
     setState(() {
-      tasks.removeAt(index);
+      tasks.remove(taskToRemove);
+      filterTasks();
     });
   }
 
-  // Función para marcar una tarea como completada
   void toggleTaskCompletion(int index) {
+    String taskToUpdate = filteredTasks[index];
+    int originalIndex = tasks.indexOf(taskToUpdate);
     setState(() {
-      tasks[index] = tasks[index] + " ✅";
+      tasks[originalIndex] = taskToUpdate + " ✅";
+      filterTasks();
     });
+  }
+
+  @override
+  void dispose() {
+    taskController.dispose();
+    searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -60,7 +90,19 @@ class _ToDoListState extends State<ToDoList> {
       ),
       body: Column(
         children: [
-          // Campo de texto para agregar tareas
+          // Campo para buscar tareas
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Buscar tarea...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          // Campo para agregar tareas
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -80,29 +122,31 @@ class _ToDoListState extends State<ToDoList> {
               ],
             ),
           ),
-          // Lista de tareas
+          // Lista de tareas filtradas
           Expanded(
-            child: ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(tasks[index]),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.check),
-                        onPressed: () => toggleTaskCompletion(index),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () => removeTask(index),
-                      ),
-                    ],
+            child: filteredTasks.isEmpty
+                ? Center(child: Text('No hay tareas que coincidan'))
+                : ListView.builder(
+                    itemCount: filteredTasks.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(filteredTasks[index]),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.check),
+                              onPressed: () => toggleTaskCompletion(index),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () => removeTask(index),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
